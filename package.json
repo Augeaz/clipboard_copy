@@ -35,6 +35,16 @@
           "group": "5_cutcopypaste@10"
         }
       ]
+    },
+    "configuration": {
+      "title": "ClipboardCopy",
+      "properties": {
+        "clipboard-copy.allowedFilePatterns": {
+          "type": "string",
+          "default": "*.py,*.js,*.ts",
+          "description": "Comma-separated file patterns to include when copying folders (e.g., *.py,*.js,*.ts)"
+        }
+      }
     }
   },
   "scripts": {
