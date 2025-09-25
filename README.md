@@ -120,6 +120,11 @@ npm run compile
 
 # Watch for changes during development
 npm run watch
+
+# Optional: Publish your extension to the Marketplace
+# Ensure you have a Personal Access Token set as VSCE_TOKEN or run `vsce login` first
+# Use the command below (optionally specify patch/minor/major)
+npx @vscode/vsce publish
 ```
 
 ### Testing

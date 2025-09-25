@@ -1,0 +1,26 @@
+# Source files
+src/**
+tsconfig.json
+
+# Development files
+.vscode/**
+.vscode-test/**
+.gitignore
+
+# Documentation and development notes
+CLAUDE.md
+docs/**
+
+# Node modules and build artifacts
+node_modules/**
+*.vsix
+
+# Test files
+test/**
+**/*.test.js
+**/*.test.ts
+
+# Other development files
+.eslintrc.json
+.prettierrc
+*.log
