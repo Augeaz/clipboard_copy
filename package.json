@@ -2,7 +2,12 @@
   "name": "clipboard-copy",
   "displayName": "ClipboardCopy",
   "description": "Copy file and folder contents to clipboard via Explorer context menu",
-  "version": "0.0.3",
+  "version": "0.0.4",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "extensionKind": [
     "workspace"
   ],
