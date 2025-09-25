@@ -4,36 +4,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a VS Code extension called "ClipboardCopy" that allows users to copy file and folder contents to the clipboard via Explorer context menu. The extension supports both single file copying and folder copying (with recursive/non-recursive options).
+This is a VS Code extension called "ClipboardCopy" that allows users to copy file and folder contents to the clipboard via Explorer context menu. The extension supports single file copying, multiple file selection, and folder copying (with recursive/non-recursive options).
+
+## Current Implementation Status
+
+The extension is fully implemented and functional with ~90 lines of TypeScript code.
 
 ## Architecture
 
 The extension follows standard VS Code extension structure:
 
-- **package.json**: Defines extension metadata, commands, and menu contributions
+- **package.json**: Extension manifest with metadata, commands, and menu contributions
   - Two main commands: `copyFileToClipboard` and `copyFolderToClipboard`
   - Context menu integration in Explorer for files and folders
+  - TypeScript compilation and development dependencies
   - Activation event: `onStartupFinished`
 
-- **src/extension.ts**: Main extension logic
-  - `copyFileToClipboard`: Reads single file content using `vscode.workspace.fs.readFile`
-  - `copyFolderToClipboard`: Uses `vscode.workspace.findFiles` to gather files, prompts for recursive option
-  - Content concatenation with file separators for folders
-  - Clipboard operations via `vscode.env.clipboard.writeText`
+- **src/extension.ts**: Main extension logic (90 lines)
+  - `copyFileToClipboard`: Supports both single and multiple file selection
+    - Single file: copies content directly
+    - Multiple files: concatenates with "--- File: path ---" separators
+  - `copyFolderToClipboard`: Prompts for recursive/non-recursive copying using `vscode.workspace.findFiles`
+  - All clipboard operations via `vscode.env.clipboard.writeText`
+  - Comprehensive error handling with VS Code notifications
+
+- **tsconfig.json**: TypeScript configuration targeting ES2020
+- **.vscode/launch.json**: Debug configuration for Extension Development Host
+- **.gitignore**: Excludes compiled output, dependencies, and packaged extensions
 
 ## Development Commands
 
-Since this is a VS Code extension project, typical commands would be:
-- `npm install` - Install dependencies
-- `npm run compile` - Compile TypeScript
-- `npm run test` - Run tests
+- `npm install` - Install development dependencies
+- `npm run compile` - Compile TypeScript to JavaScript (outputs to `out/`)
+- `npm run watch` - Watch mode compilation
 - `F5` in VS Code - Launch Extension Development Host for testing
 
-## Key Design Decisions
+## Testing the Extension
 
-- Uses VS Code's built-in filesystem API (`vscode.workspace.fs`) for file operations
-- Relies on VS Code's clipboard API for cross-platform clipboard support
-- File separator format: "--- File: relativePath ---" for folder content concatenation
-- Error handling through VS Code notification system (`vscode.window.showErrorMessage`)
-- Target: ~150 LOC total for MVP
-- Local workspace focus with remote clipboard sync via VS Code's built-in functionality
+1. Press `F5` to launch Extension Development Host
+2. Open any folder in the new VS Code window
+3. Right-click files in Explorer → "Copy File to Clipboard" (supports multi-select)
+4. Right-click folders in Explorer → "Copy Folder to Clipboard" → choose recursive/non-recursive
+
+## Key Features Implemented
+
+- **Single file copying**: Direct content copy to clipboard
+- **Multiple file selection**: Ctrl+click multiple files, copies all with separators
+- **Folder copying**: Recursive and non-recursive options
+- **File concatenation format**: "--- File: relativePath ---" separators
+- **Cross-platform clipboard support**: Uses VS Code's built-in clipboard API
+- **Error handling**: User-friendly notifications for failures
+
+## Project Structure
+
+```
+clipboard_copy/
+├── .vscode/launch.json      # Debug configuration
+├── src/extension.ts         # Main extension logic (90 lines)
+├── out/extension.js         # Compiled JavaScript
+├── package.json             # Extension manifest
+├── tsconfig.json           # TypeScript configuration
+├── .gitignore              # Git ignore rules
+└── docs/prd.md             # Original product requirements
+```
