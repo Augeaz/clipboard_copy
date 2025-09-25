@@ -163,11 +163,11 @@ We welcome contributions! To get started:
 5. Push to the branch: `git push origin feature/amazing-feature`
 6. Open a Pull Request
 
-For development guidance, see [CLAUDE.md](./CLAUDE.md) in the repository.
+Please ensure you test all functionality thoroughly before submitting changes.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 📈 Changelog
 
@@ -183,4 +183,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the VS Code community**
 
-[Report Issues](../../issues) | [Request Features](../../issues) | [View Source](../../)
+Check the VS Code Extensions Marketplace for updates and support.

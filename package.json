@@ -6,10 +6,14 @@
   "engines": {
     "vscode": "^1.80.0"
   },
-  "categories": ["Other"],
-  "activationEvents": [
-    "onStartupFinished"
+  "categories": [
+    "Other"
   ],
+  "publisher": "AugeazLabs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Augeaz/clipboard_copy.git"
+  },
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
