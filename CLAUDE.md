@@ -1,138 +1,123 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with this VS Code extension repository.
 
 ## Project Overview
 
-This is a VS Code extension called "ClipboardCopy" that allows users to copy file and folder contents to the clipboard via Explorer context menu. The extension supports single file copying, multiple file selection, and folder copying (with recursive/non-recursive options).
+**ClipboardCopy** is a mature VS Code extension (v0.0.3) that copies file and folder contents to clipboard via Explorer context menu. The 396-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability.
 
-Key feature: **Configurable file pattern filtering** - users can specify which file types to include (e.g., `*.py,*.js,*.ts`) via VS Code settings or runtime prompts. Pattern filtering applies to both individual file selection and folder copying operations.
+**Core Features:**
+- Pattern filtering with advanced glob support (`*.{js,ts}`, `[a-z]`)
+- Security-hardened input validation and path traversal prevention
+- Concurrent file processing for performance
+- Comprehensive error handling with sanitized messages
 
-## Current Implementation Status
+## Quick Start
 
-The extension is fully implemented and functional with ~186 lines of TypeScript code. Recent enhancements include configurable file pattern filtering, VS Code settings integration, and enhanced user feedback for filtered operations.
+**Development Setup:**
+```bash
+npm install                 # Install dependencies (Node.js 18.x+)
+npm run compile            # Compile TypeScript
+F5 in VS Code             # Launch Extension Development Host
+```
+
+**Key Commands:**
+- `copyFileToClipboard` - Copy selected files with pattern filtering
+- `copyFolderToClipboard` - Copy folder contents with recursive options
+
+**Configuration:**
+- `clipboard-copy.allowedFilePatterns`: File patterns (default: `*.py,*.js,*.ts`)
 
 ## Architecture
 
-The extension follows standard VS Code extension structure:
+**Tech Stack:** VS Code API 1.93.0+, TypeScript 5.5+ (ES2022/Node16)
 
-- **package.json**: Extension manifest with metadata, commands, and menu contributions
-  - Two main commands: `copyFileToClipboard` and `copyFolderToClipboard`
-  - Context menu integration in Explorer for files and folders
-  - **Configuration section**: `clipboard-copy.allowedFilePatterns` setting
-    - Default: `*.py,*.js,*.ts` (comma-separated patterns)
-    - Type: string with user-friendly format
-  - TypeScript compilation and development dependencies
-  - Activation event: `onStartupFinished`
+**Key Components:**
+- **CONSTANTS**: Centralized strings for maintainability
+- **Security Functions**: Input validation, path traversal prevention
+- **Pattern Matching**: Cross-platform glob support with brace expansion
+- **File Operations**: Concurrent reading with `Promise.all`, smart error handling
+- **Commands**: Resource type validation, detailed error reporting
 
-- **src/extension.ts**: Main extension logic (186 lines)
-  - **Helper functions**:
-    - `getFilePatterns()`: Reads VS Code settings or prompts user for patterns
-    - `matchesPattern()`: Converts glob patterns to regex for file matching
-  - `copyFileToClipboard`: Supports pattern-filtered single and multiple file selection
-    - Filters selected files based on configured patterns
-    - Single file: copies content directly
-    - Multiple files: concatenates with "--- File: path ---" separators
-    - Shows filtering statistics in user messages
-  - `copyFolderToClipboard`: Pattern-aware recursive/non-recursive folder copying
-    - Prompts for recursive/non-recursive option (unchanged UI)
-    - Uses multiple `vscode.workspace.findFiles` calls with different patterns
-    - Handles recursive (`**/${pattern}`) vs non-recursive (`pattern`) logic
-    - Deduplicates files when multiple patterns match same file
-  - All clipboard operations via `vscode.env.clipboard.writeText`
-  - Comprehensive error handling with VS Code notifications
+## Development Guidelines
 
-- **tsconfig.json**: TypeScript configuration targeting ES2020
-- **.vscode/launch.json**: Debug configuration for Extension Development Host
-- **.gitignore**: Excludes compiled output, dependencies, and packaged extensions
+**Code Style:**
+- ES2022 syntax with strict TypeScript checking
+- ES modules (import/export), avoid CommonJS
+- Extract strings to `CONSTANTS` for maintainability
+- Small, focused functions with single responsibility
+- Security-first: validate inputs, sanitize error messages
+- JSDoc comments for complex pattern matching functions
 
-## Development Commands
+**Commands:**
+- `npm run compile` - Compile to `out/`
+- `npm run watch` - Watch mode
+- `Ctrl+Shift+F5` - Reload extension in dev host
 
-- `npm install` - Install development dependencies
-- `npm run compile` - Compile TypeScript to JavaScript (outputs to `out/`)
-- `npm run watch` - Watch mode compilation
-- `F5` in VS Code - Launch Extension Development Host for testing
+## Testing
 
-## Testing the Extension
+**Setup:** Launch Extension Development Host with `F5`, open folder with mixed file types
 
-### Basic Setup
-1. Press `F5` to launch Extension Development Host
-2. Open any folder with mixed file types (.js, .py, .ts, .md, .txt, etc.) in the new VS Code window
+**Core Tests:**
+1. **Pattern Configuration**: Settings → "clipboard-copy" → Test patterns like `*.{js,ts}`, `*.[ch]`
+2. **File Selection**: Multi-select (Ctrl+click) → Right-click → "Copy File to Clipboard"
+3. **Folder Operations**: Right-click folder → Test recursive/non-recursive options
 
-### Testing Pattern Configuration
-3. **Configure patterns via VS Code settings**:
-   - Open Settings (Ctrl+,)
-   - Search for "clipboard-copy"
-   - Set `allowedFilePatterns` to `*.py,*.js` (or your preferred patterns)
+**Security Tests:**
+1. **Input Validation**: Test malicious patterns (`../`, `~/`, `/etc/passwd`)
+2. **Error Sanitization**: Verify generic error messages, no path exposure
+3. **Resource Validation**: Test wrong command on resource type
 
-4. **Test file selection with patterns**:
-   - Ctrl+click multiple files of different types (e.g., app.js, README.md, main.py)
-   - Right-click → "Copy File to Clipboard"
-   - Should only copy files matching patterns (app.js, main.py)
-   - Message should show: "2 files copied to clipboard (1 filtered out)"
+**Performance Tests:**
+1. **Concurrent Processing**: Test 50+ files for timeout/processing issues
+2. **Pattern Matching**: Complex patterns on large folders (1000+ files)
+3. **Cancellation**: Test operation cancellation with proper user feedback
 
-5. **Test folder copying with patterns**:
-   - Right-click on a folder → "Copy Folder to Clipboard"
-   - Choose recursive/non-recursive
-   - Should only copy files matching your configured patterns
-   - Message should show count of files found vs filtered
+## Security Architecture
 
-### Testing Pattern Prompting
-6. **Clear the setting** (set `allowedFilePatterns` to empty string)
-7. **Test runtime prompting**:
-   - Try copying files or folders
-   - Should prompt with input box: "Enter file patterns to copy"
-   - Default value should be `*.py,*.js,*.ts`
-   - Test with custom patterns like `*.md,*.txt`
+**Input Validation:**
+- Pattern sanitization against malicious inputs (`../`, `~/`, absolute paths)
+- Safe character set enforcement (alphanumeric, dots, asterisks, commas)
+- Real-time validation in VS Code settings
 
-### Testing Edge Cases
-8. **Test with no matching files**: Configure patterns like `*.xyz` and try copying
-9. **Test single file selection**: Should still respect patterns
-10. **Test recursive vs non-recursive**: Verify pattern logic works in both modes
+**Resource Protection:**
+- URI validation for correct operation types (file vs folder)
+- Type checking with `vscode.workspace.fs.stat()` before processing
+- Graceful handling of unreadable files
 
-## Key Features Implemented
-
-- **Configurable file pattern filtering**:
-  - VS Code setting: `clipboard-copy.allowedFilePatterns` (default: `*.py,*.js,*.ts`)
-  - Runtime prompting: If setting is empty, prompts user for patterns
-  - Applies to both file selection and folder copying operations
-  - Case-insensitive pattern matching (*.JS matches .js files)
-
-- **Single file copying**:
-  - Direct content copy to clipboard
-  - Pattern filtering applied to selected files
-
-- **Multiple file selection**:
-  - Ctrl+click multiple files, copies only those matching patterns
-  - Concatenates with "--- File: path ---" separators
-  - Shows filtering statistics: "3 files copied (2 filtered out)"
-
-- **Folder copying**:
-  - Recursive and non-recursive options (unchanged UI)
-  - Smart pattern adjustment: recursive uses `**/${pattern}`, non-recursive uses `pattern`
-  - Multiple pattern processing with deduplication
-  - Pattern-based file discovery using `vscode.workspace.findFiles`
-
-- **Enhanced user feedback**:
-  - Clear messages about filtered vs total file counts
-  - Warning when no files match patterns
-  - Error handling for invalid patterns or configuration
-
-- **File concatenation format**: "--- File: relativePath ---" separators
-- **Cross-platform clipboard support**: Uses VS Code's built-in clipboard API
-- **Comprehensive error handling**: User-friendly notifications for all failure scenarios
+**Error Security:**
+- Generic error messages prevent information leakage
+- Limited file reporting (max 3 examples, relative paths only)
+- Sanitized outputs in all user-facing messages
 
 ## Project Structure
 
 ```
 clipboard_copy/
-├── .vscode/launch.json      # Debug configuration
-├── src/extension.ts         # Main extension logic (186 lines)
-│                           # Includes pattern filtering, helper functions
-├── out/extension.js         # Compiled JavaScript
-├── package.json             # Extension manifest with configuration schema
-├── tsconfig.json           # TypeScript configuration
-├── .gitignore              # Git ignore rules
-├── CLAUDE.md               # Project documentation and development guide
-└── docs/prd.md             # Original product requirements
+├── src/extension.ts         # Main logic (396 lines) - modular, security-hardened
+├── package.json             # Extension manifest v0.0.3, VS Code API 1.93.0+
+├── tsconfig.json            # TypeScript ES2022/Node16 configuration
+├── out/                     # Compiled JavaScript output
+├── .vscode/launch.json      # Extension Development Host debug config
+└── README.md, LICENSE.md    # User documentation, MIT license
 ```
+
+## Development Workflow
+
+**Branch Strategy:**
+- `main` - Production-ready code
+- `feature/<desc>` - New features
+- `bugfix/<desc>` - Bug fixes
+- `security/<desc>` - Security updates
+
+**Commit Prefixes:**
+- `[SECURITY]` - Input validation, error sanitization
+- `[PERF]` - Performance optimizations
+- `[FEAT]` - New functionality
+- `[FIX]` - Bug fixes
+
+**Pre-commit Checklist:**
+- Run `npm run compile` - Ensure compilation succeeds
+- Test security patterns for input-handling changes
+- Performance test with large file sets
+- Cross-platform testing for path handling changes

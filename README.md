@@ -1,20 +1,33 @@
 # ClipboardCopy - VS Code Extension
 
-![VS Code](https://img.shields.io/badge/VS%20Code-1.80.0+-007ACC?logo=visual-studio-code&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.x-3178C6?logo=typescript&logoColor=white)
+![VS Code](https://img.shields.io/badge/VS%20Code-1.93.0+-007ACC?logo=visual-studio-code&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-3178C6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
+![Security](https://img.shields.io/badge/Security-Hardened-green)
 
-Copy file and folder contents to clipboard directly from VS Code Explorer context menu with **configurable file pattern filtering**.
+Copy file and folder contents to clipboard directly from VS Code Explorer context menu with **enhanced security, performance, and intelligent file pattern filtering**.
 
 ## ✨ Features
 
-- 🎯 **Smart Pattern Filtering**: Configure which file types to copy (e.g., `*.py,*.js,*.ts`)
+### Core Functionality
+- 🎯 **Enhanced Pattern Filtering**: Advanced glob patterns including `*.{js,ts}`, `[a-z]`, and more
 - 📁 **File & Folder Support**: Copy single files, multiple selections, or entire folders
 - 🔄 **Recursive Options**: Choose recursive or non-recursive folder copying
 - ⚙️ **VS Code Integration**: Configure via settings or runtime prompts
-- 📊 **Smart Feedback**: See how many files were copied vs filtered out
 - 🖱️ **Explorer Context Menu**: Right-click integration for seamless workflow
-- 🌐 **Cross-Platform**: Works on Windows, macOS, and Linux
+
+### Performance & Reliability
+- ⚡ **Concurrent Processing**: Parallel file reading for better performance
+- 🔒 **Input Validation**: Security hardened against malicious file patterns
+- 📊 **Detailed Feedback**: Smart error reporting with specific failed file names
+- 🌐 **Cross-Platform**: Robust path handling for Windows, macOS, and Linux
+- 🛡️ **Resource Validation**: Ensures operations are performed on correct file types
+
+### User Experience
+- 🎯 **Smart Error Messages**: Helpful feedback without exposing sensitive information
+- 📈 **Progress Tracking**: See exactly which files were copied vs filtered out
+- 🔄 **Graceful Cancellation**: Clear feedback when operations are cancelled
+- 📝 **Brace Expansion**: Support for patterns like `*.{js,ts,py}` for convenience
 
 ## 🚀 Quick Start
 
@@ -75,11 +88,15 @@ Configure file patterns in your VS Code settings:
 - **Documentation**: `*.md,*.txt,*.rst`
 - **Web files**: `*.html,*.css,*.js`
 - **All text files**: `*.txt,*.md,*.json,*.yml`
+- **Brace expansion**: `*.{js,ts}`, `*.{py,pyx,pyi}`
+- **Character classes**: `*.[ch]`, `test[0-9].js`
 
 ### Runtime Prompting
 If no pattern is configured, the extension will prompt you:
 - Input box appears: "Enter file patterns to copy"
 - Default suggestion: `*.py,*.js,*.ts`
+- **Input validation**: Only safe patterns are accepted
+- **Security**: Patterns like `../`, `~`, or absolute paths are rejected
 - Your input is used for the current operation
 
 ## 📋 Output Format
@@ -102,9 +119,9 @@ print('Hello World')
 ## 💻 Development
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (16.x or higher)
-- [TypeScript](https://www.typescriptlang.org/) (5.1.6 or higher)
-- [VS Code](https://code.visualstudio.com/) (1.80.0 or higher)
+- [Node.js](https://nodejs.org/) (18.x or higher)
+- [TypeScript](https://www.typescriptlang.org/) (5.5.0 or higher)
+- [VS Code](https://code.visualstudio.com/) (1.93.0 or higher)
 
 ### Setup
 ```bash
@@ -138,24 +155,35 @@ npx @vscode/vsce publish
 ### Project Structure
 ```
 clipboard_copy/
-├── src/extension.ts          # Main extension logic (186 lines)
-├── package.json              # Extension manifest with configuration
-├── tsconfig.json            # TypeScript configuration
+├── src/extension.ts          # Main extension logic (395+ lines)
+│                            # Enhanced with security, performance, and reliability improvements
+├── package.json              # Extension manifest with updated dependencies
+├── tsconfig.json            # TypeScript configuration (ES2022/Node16)
 ├── .vscode/launch.json      # Debug configuration
+├── CLAUDE.md               # Development guide and architecture documentation
 └── README.md               # This file
 ```
 
 ## 🔧 Requirements
 
-- **VS Code**: Version 1.80.0 or higher
+- **VS Code**: Version 1.93.0 or higher
 - **Operating System**: Windows, macOS, or Linux
 - **No additional dependencies** required for end users
 
+## 🛡️ Security Features
+
+- **Input Sanitization**: All file patterns are validated against malicious inputs
+- **Path Validation**: Prevents directory traversal attacks (`../`, `~`, absolute paths)
+- **Resource Type Validation**: Ensures operations are performed on correct file/folder types
+- **Error Message Sanitization**: Generic error messages prevent information leakage
+- **Safe Pattern Matching**: Only alphanumeric, dots, asterisks, and safe characters allowed
+
 ## ❓ Known Limitations
 
-- Pattern matching is case-insensitive but works on file names only
+- Pattern matching works on file names only (not full paths for security)
 - Binary files are copied as text (may result in garbled content)
-- Very large files may cause performance issues
+- Complex glob patterns like `!(negation)` and `**` work in folder search but not file filtering
+- Brace expansion supports basic `{a,b,c}` syntax but not nested patterns
 
 ## 🤝 Contributing
 
@@ -176,13 +204,34 @@ This project is licensed under the MIT License.
 
 ## 📈 Changelog
 
-### v0.0.1 (Current)
-- ✅ Initial release
-- ✅ File and folder copying functionality
-- ✅ Configurable pattern filtering
-- ✅ VS Code Explorer context menu integration
-- ✅ Recursive/non-recursive folder options
-- ✅ Enhanced user feedback with filtering statistics
+### v0.0.3 (Current)
+#### 🔒 Security Enhancements
+- ✅ **Input Validation**: Comprehensive pattern sanitization against malicious inputs
+- ✅ **Path Security**: Prevention of directory traversal attacks
+- ✅ **Resource Validation**: File/folder type verification before operations
+- ✅ **Error Sanitization**: Generic error messages to prevent information leakage
+
+#### ⚡ Performance Improvements
+- ✅ **Concurrent File Reading**: Parallel processing with `Promise.all` for better performance
+- ✅ **Optimized Pattern Processing**: Combined glob patterns in single `findFiles` calls
+- ✅ **Cross-platform Deduplication**: Normalized path handling for case sensitivity
+
+#### 🎯 Enhanced Features
+- ✅ **Advanced Pattern Matching**: Support for brace expansion `*.{js,ts}` and character classes `[a-z]`
+- ✅ **Detailed Error Reporting**: Specific failed file names with smart truncation
+- ✅ **Graceful Cancellation**: Clear user feedback for cancelled operations
+- ✅ **Reusable Architecture**: Modular functions for better maintainability
+
+#### 🛠️ Technical Updates
+- ✅ **VS Code API 1.93.0**: Updated for latest compatibility
+- ✅ **TypeScript 5.5**: Modern ES2022/Node16 target
+- ✅ **Code Organization**: Constants extraction and function modularization
+
+### v0.0.2
+- ✅ Publishing infrastructure and documentation improvements
+
+### v0.0.1
+- ✅ Initial release with basic functionality
 
 ---
 
