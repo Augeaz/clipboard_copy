@@ -1,8 +1,8 @@
 {
   "name": "clipboard-copy",
   "displayName": "ClipboardCopy",
-  "description": "Copy file and folder contents to clipboard via Explorer context menu with smart multi-selection and mixed item support",
-  "version": "0.0.7",
+  "description": "Copy file and folder contents to clipboard via Explorer context menu with intelligent .gitignore filtering, smart multi-selection, and mixed item support",
+  "version": "0.0.8",
   "icon": "images/icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -64,6 +64,21 @@
           "type": "string",
           "default": "*.py,*.js,*.ts",
           "description": "Comma-separated file patterns to include when copying folders (e.g., *.py,*.js,*.ts)"
+        },
+        "clipboard-copy.respectGitignore": {
+          "type": "boolean",
+          "default": true,
+          "description": "Respect .gitignore files when copying folders"
+        },
+        "clipboard-copy.respectVSCodeExcludes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Respect VS Code's files.exclude and search.exclude settings"
+        },
+        "clipboard-copy.customExcludePatterns": {
+          "type": "string",
+          "default": "",
+          "description": "Additional exclude patterns (comma-separated, e.g., node_modules,dist,.git)"
         }
       }
     }
@@ -77,5 +92,8 @@
     "@types/node": "^18.x",
     "@types/vscode": "^1.93.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "ignore": "^7.0.5"
   }
 }

@@ -11,6 +11,7 @@
 
 - 📋 **One-Click Copy**: Right-click any file or folder → instant clipboard copy
 - 🎯 **Smart Filtering**: Advanced pattern matching (`*.js`, `*.{py,ts}`, `[a-z]*`)
+- 🚫 **Intelligent Exclusions**: Automatically respects `.gitignore`, VS Code excludes, and custom patterns
 - 📁 **Bulk Operations**: Copy multiple files and entire folders with sub-directory support
 - 🎨 **Context-Aware**: Smart menu labels adapt to your selection (single file/folder vs multiple items)
 - 🔄 **Mixed Selections**: Seamlessly handle files and folders together in one operation
@@ -52,6 +53,47 @@ The extension shows **context-aware commands** based on your selection:
 }
 ```
 
+## 🚫 Exclude Filtering
+
+The extension automatically excludes unwanted files using **three smart filtering mechanisms**:
+
+### 1. .gitignore Support (Default: Enabled)
+Automatically respects `.gitignore` files in your workspace root:
+- `node_modules/` → excluded
+- `dist/`, `build/` → excluded
+- `.env`, `*.log` → excluded
+
+```json
+{
+    "clipboard-copy.respectGitignore": true  // default
+}
+```
+
+### 2. VS Code Excludes (Default: Enabled)
+Honors VS Code's `files.exclude` and `search.exclude` settings:
+```json
+{
+    "clipboard-copy.respectVSCodeExcludes": true,  // default
+    "files.exclude": {
+        "**/.git": true,
+        "**/node_modules": true
+    },
+    "search.exclude": {
+        "**/dist": true
+    }
+}
+```
+
+### 3. Custom Exclude Patterns
+Add your own patterns to exclude:
+```json
+{
+    "clipboard-copy.customExcludePatterns": "*.test.js,*.spec.ts,__pycache__"
+}
+```
+
+**All three filters work together** to keep unwanted files out of your clipboard!
+
 ## 📖 Examples
 
 ### Basic File Patterns
@@ -59,7 +101,7 @@ The extension shows **context-aware commands** based on your selection:
 // Source code files
 "clipboard-copy.allowedFilePatterns": "*.py,*.js,*.ts,*.jsx,*.tsx"
 
-// Documentation files  
+// Documentation files
 "clipboard-copy.allowedFilePatterns": "*.md,*.txt,*.rst,*.doc"
 
 // Web development
@@ -67,6 +109,36 @@ The extension shows **context-aware commands** based on your selection:
 
 // Advanced patterns
 "clipboard-copy.allowedFilePatterns": "*.{js,ts},test*.py,src/**/*.md"
+```
+
+### Exclude Patterns in Action
+**Scenario**: Copying a folder with .gitignore containing `node_modules/` and `*.log`
+
+Directory structure:
+```
+my-project/
+├── src/
+│   ├── app.js
+│   └── utils.js
+├── node_modules/    ← excluded by .gitignore
+│   └── ...
+├── debug.log        ← excluded by .gitignore
+└── README.md
+```
+
+**Result**: Only `src/app.js`, `src/utils.js`, and `README.md` are copied!
+
+### Full Configuration Example
+```json
+{
+    // Include patterns (what to copy)
+    "clipboard-copy.allowedFilePatterns": "*.js,*.ts,*.py",
+
+    // Exclude patterns (what to skip)
+    "clipboard-copy.respectGitignore": true,
+    "clipboard-copy.respectVSCodeExcludes": true,
+    "clipboard-copy.customExcludePatterns": "*.min.js,*.bundle.js,temp"
+}
 ```
 
 ### Pattern Filtering in Action
@@ -128,7 +200,14 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### 🆕 Version 0.0.7
+### 🆕 Version 0.0.8
+- 🚫 **Intelligent Exclusions**: Automatically respect `.gitignore` files
+- 🎛️ **VS Code Integration**: Honor `files.exclude` and `search.exclude` settings
+- ✨ **Custom Excludes**: Add your own patterns to skip unwanted files
+- 🔒 **Enhanced Security**: Path validation for .gitignore with safe pattern parsing
+- 📦 **Smart Filtering**: All three exclude mechanisms work together seamlessly
+
+### Version 0.0.7
 - 🎨 **Context-Aware Commands**: Menu labels now adapt based on selection type
   - Single file → "Copy File to Clipboard"
   - Single folder → "Copy Folder to Clipboard"

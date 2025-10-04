@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import ignore from 'ignore';
 
 // Constants for maintainability and localization
 const CONSTANTS = {
@@ -10,7 +11,10 @@ const CONSTANTS = {
     },
     CONFIG: {
         NAMESPACE: 'clipboard-copy',
-        ALLOWED_FILE_PATTERNS: 'allowedFilePatterns'
+        ALLOWED_FILE_PATTERNS: 'allowedFilePatterns',
+        RESPECT_GITIGNORE: 'respectGitignore',
+        RESPECT_VSCODE_EXCLUDES: 'respectVSCodeExcludes',
+        CUSTOM_EXCLUDE_PATTERNS: 'customExcludePatterns'
     },
     MESSAGES: {
         NO_FILES_SELECTED: 'No files selected',
@@ -225,9 +229,137 @@ async function readFilesContent(files: vscode.Uri[]): Promise<{
     };
 }
 
+// Load .gitignore patterns from workspace root
+async function loadGitignorePatterns(workspaceFolder: vscode.WorkspaceFolder): Promise<string[]> {
+    try {
+        const gitignorePath = vscode.Uri.joinPath(workspaceFolder.uri, '.gitignore');
+
+        // Security: Validate that .gitignore is within workspace
+        if (!gitignorePath.fsPath.startsWith(workspaceFolder.uri.fsPath)) {
+            return [];
+        }
+
+        const gitignoreData = await vscode.workspace.fs.readFile(gitignorePath);
+        const gitignoreContent = new TextDecoder().decode(gitignoreData);
+
+        // Parse .gitignore using ignore library
+        const ig = ignore().add(gitignoreContent);
+
+        // Extract patterns from the ignore instance
+        // Note: We return patterns that can be used with glob syntax
+        const patterns = gitignoreContent
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#'))
+            .map(pattern => {
+                // Convert .gitignore patterns to glob patterns for findFiles
+                // Remove leading slash for relative patterns
+                if (pattern.startsWith('/')) {
+                    pattern = pattern.substring(1);
+                }
+                // Ensure directory patterns end with /**
+                if (pattern.endsWith('/')) {
+                    return `${pattern}**`;
+                }
+                return pattern;
+            });
+
+        return patterns;
+    } catch {
+        // .gitignore not found or not readable
+        return [];
+    }
+}
+
+// Get VS Code's files.exclude and search.exclude patterns
+function getVSCodeExcludePatterns(): string[] {
+    const patterns: string[] = [];
+
+    try {
+        // Get files.exclude settings
+        const filesExclude = vscode.workspace.getConfiguration('files').get<Record<string, boolean>>('exclude');
+        if (filesExclude) {
+            for (const [pattern, enabled] of Object.entries(filesExclude)) {
+                if (enabled) {
+                    patterns.push(pattern);
+                }
+            }
+        }
+
+        // Get search.exclude settings
+        const searchExclude = vscode.workspace.getConfiguration('search').get<Record<string, boolean>>('exclude');
+        if (searchExclude) {
+            for (const [pattern, enabled] of Object.entries(searchExclude)) {
+                if (enabled && !patterns.includes(pattern)) {
+                    patterns.push(pattern);
+                }
+            }
+        }
+    } catch {
+        // Failed to read VS Code settings
+    }
+
+    return patterns;
+}
+
+// Build combined exclude pattern from all sources
+async function buildExcludePattern(workspaceFolder?: vscode.WorkspaceFolder): Promise<string | undefined> {
+    const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
+    const allPatterns: string[] = [];
+
+    // Load .gitignore patterns if enabled
+    const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
+    if (respectGitignore && workspaceFolder) {
+        const gitignorePatterns = await loadGitignorePatterns(workspaceFolder);
+        allPatterns.push(...gitignorePatterns);
+    }
+
+    // Load VS Code exclude patterns if enabled
+    const respectVSCodeExcludes = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_VSCODE_EXCLUDES, true);
+    if (respectVSCodeExcludes) {
+        const vscodePatterns = getVSCodeExcludePatterns();
+        allPatterns.push(...vscodePatterns);
+    }
+
+    // Load custom exclude patterns
+    const customExcludePatterns = config.get<string>(CONSTANTS.CONFIG.CUSTOM_EXCLUDE_PATTERNS, '');
+    if (customExcludePatterns && customExcludePatterns.trim() !== '') {
+        // Validate custom patterns for security
+        if (validateFilePatterns(customExcludePatterns)) {
+            const customPatterns = customExcludePatterns
+                .split(',')
+                .map(p => p.trim())
+                .filter(p => p.length > 0);
+            allPatterns.push(...customPatterns);
+        }
+    }
+
+    // Return undefined if no patterns
+    if (allPatterns.length === 0) {
+        return undefined;
+    }
+
+    // Deduplicate patterns
+    const uniquePatterns = Array.from(new Set(allPatterns));
+
+    // Combine into single glob pattern using brace expansion
+    if (uniquePatterns.length === 1) {
+        return `**/${uniquePatterns[0]}`;
+    }
+
+    // Use brace expansion for multiple patterns
+    return `**/{${uniquePatterns.join(',')}}`;
+}
+
 // Optimized glob pattern processing with single findFiles call
 async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecursive: boolean): Promise<vscode.Uri[]> {
     try {
+        // Get workspace folder for exclude pattern building
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+
+        // Build exclude pattern from all sources
+        const excludePattern = await buildExcludePattern(workspaceFolder);
+
         // Combine patterns for efficient single search
         const adjustedPatterns = patterns.map(pattern =>
             isRecursive ? `**/${pattern}` : pattern
@@ -239,7 +371,8 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
             : adjustedPatterns[0];
 
         const files = await vscode.workspace.findFiles(
-            new vscode.RelativePattern(uri, combinedPattern)
+            new vscode.RelativePattern(uri, combinedPattern),
+            excludePattern
         );
 
         // Normalize paths for cross-platform deduplication (handle case sensitivity)
@@ -254,12 +387,16 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
         return Array.from(uniqueFiles.values());
     } catch {
         // Fallback to individual pattern processing if brace expansion fails
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+        const excludePattern = await buildExcludePattern(workspaceFolder);
+
         const allFiles: vscode.Uri[] = [];
         for (const pattern of patterns) {
             try {
                 const adjustedPattern = isRecursive ? `**/${pattern}` : pattern;
                 const files = await vscode.workspace.findFiles(
-                    new vscode.RelativePattern(uri, adjustedPattern)
+                    new vscode.RelativePattern(uri, adjustedPattern),
+                    excludePattern
                 );
                 allFiles.push(...files);
             } catch {
