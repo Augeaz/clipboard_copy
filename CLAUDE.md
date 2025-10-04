@@ -4,9 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-**ClipboardCopy** is a mature VS Code extension (v0.0.3) that copies file and folder contents to clipboard via Explorer context menu. The 396-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability.
+**ClipboardCopy** is a mature VS Code extension (v0.0.7) that copies file and folder contents to clipboard via Explorer context menu. The 600-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability.
 
 **Core Features:**
+- Context-aware commands that adapt to selection type (single vs multiple items)
+- Mixed selection support (files + folders in one operation)
+- Multi-folder concurrent processing with deduplication
 - Pattern filtering with advanced glob support (`*.{js,ts}`, `[a-z]`)
 - Security-hardened input validation and path traversal prevention
 - Concurrent file processing for performance
@@ -22,8 +25,9 @@ F5 in VS Code             # Launch Extension Development Host
 ```
 
 **Key Commands:**
-- `copyFileToClipboard` - Copy selected files with pattern filtering
-- `copyFolderToClipboard` - Copy folder contents with recursive options
+- `copyFileToClipboard` - Copy single file with pattern filtering
+- `copyFolderToClipboard` - Copy single folder contents with recursive options
+- `copyContentToClipboard` - Copy multiple items (files/folders/mixed) with smart processing
 
 **Configuration:**
 - `clipboard-copy.allowedFilePatterns`: File patterns (default: `*.py,*.js,*.ts`)
@@ -33,11 +37,13 @@ F5 in VS Code             # Launch Extension Development Host
 **Tech Stack:** VS Code API 1.93.0+, TypeScript 5.5+ (ES2022/Node16)
 
 **Key Components:**
-- **CONSTANTS**: Centralized strings for maintainability
+- **CONSTANTS**: Centralized strings for maintainability (includes all 3 command IDs)
 - **Security Functions**: Input validation, path traversal prevention
+- **Selection Helpers**: `separateFilesAndFolders` - separates mixed URI selections
 - **Pattern Matching**: Cross-platform glob support with brace expansion
 - **File Operations**: Concurrent reading with `Promise.all`, smart error handling
-- **Commands**: Resource type validation, detailed error reporting
+- **Folder Processing**: `processFoldersContent` - multi-folder concurrent processing with deduplication
+- **Commands**: 3 context-aware commands with resource type validation and detailed error reporting
 
 ## Development Guidelines
 
@@ -60,8 +66,12 @@ F5 in VS Code             # Launch Extension Development Host
 
 **Core Tests:**
 1. **Pattern Configuration**: Settings → "clipboard-copy" → Test patterns like `*.{js,ts}`, `*.[ch]`
-2. **File Selection**: Multi-select (Ctrl+click) → Right-click → "Copy File to Clipboard"
-3. **Folder Operations**: Right-click folder → Test recursive/non-recursive options
+2. **Single File**: Right-click single file → "Copy File to Clipboard"
+3. **Single Folder**: Right-click single folder → "Copy Folder to Clipboard" → Test recursive/non-recursive
+4. **Multi-Selection**:
+   - Select 3 files → "Copy Content to Clipboard"
+   - Select 2 folders → "Copy Content to Clipboard" → Test recursive
+   - Select 2 files + 1 folder (mixed) → "Copy Content to Clipboard"
 
 **Security Tests:**
 1. **Input Validation**: Test malicious patterns (`../`, `~/`, `/etc/passwd`)
@@ -94,8 +104,8 @@ F5 in VS Code             # Launch Extension Development Host
 
 ```
 clipboard_copy/
-├── src/extension.ts         # Main logic (396 lines) - modular, security-hardened
-├── package.json             # Extension manifest v0.0.3, VS Code API 1.93.0+
+├── src/extension.ts         # Main logic (600 lines) - modular, security-hardened
+├── package.json             # Extension manifest v0.0.7, VS Code API 1.93.0+
 ├── tsconfig.json            # TypeScript ES2022/Node16 configuration
 ├── out/                     # Compiled JavaScript output
 ├── .vscode/launch.json      # Extension Development Host debug config

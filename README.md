@@ -12,10 +12,12 @@
 - 📋 **One-Click Copy**: Right-click any file or folder → instant clipboard copy
 - 🎯 **Smart Filtering**: Advanced pattern matching (`*.js`, `*.{py,ts}`, `[a-z]*`)
 - 📁 **Bulk Operations**: Copy multiple files and entire folders with sub-directory support
+- 🎨 **Context-Aware**: Smart menu labels adapt to your selection (single file/folder vs multiple items)
+- 🔄 **Mixed Selections**: Seamlessly handle files and folders together in one operation
 - ⚙️ **Configurable**: Set file patterns in VS Code settings or runtime prompts
-- � **Secure**: Input validation prevents malicious patterns and directory traversal
-- ⚡ **Fast**: Concurrent processing for optimal performance
-- � **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux
+- 🔒 **Secure**: Input validation prevents malicious patterns and directory traversal
+- ⚡ **Fast**: Concurrent processing for optimal performance with multi-folder support
+- 🌍 **Cross-Platform**: Works seamlessly on Windows, macOS, and Linux
 
 ## 🚀 Getting Started
 
@@ -29,12 +31,19 @@ Install directly from the [VS Code Marketplace](https://marketplace.visualstudio
 
 ### Usage
 
-**Copy Files:**
+The extension shows **context-aware commands** based on your selection:
+
+**Single File:**
 - Right-click any file in Explorer → **"Copy File to Clipboard"**
 
-**Copy Folders:**
+**Single Folder:**
 - Right-click any folder in Explorer → **"Copy Folder to Clipboard"**
 - Choose recursive (with subdirectories) or non-recursive
+
+**Multiple Items** (files, folders, or mixed):
+- Select multiple items (Ctrl+click or Shift+click)
+- Right-click → **"Copy Content to Clipboard"**
+- Processes all files and folders intelligently with pattern filtering
 
 **Configure File Patterns:**
 ```json
@@ -62,9 +71,19 @@ Install directly from the [VS Code Marketplace](https://marketplace.visualstudio
 
 ### Pattern Filtering in Action
 When you select mixed files like `app.js`, `README.md`, `main.py` with pattern `*.py,*.js`:
-- ✅ Copies: `app.js`, `main.py`  
+- ✅ Copies: `app.js`, `main.py`
 - ⚠️ Filters out: `README.md`
 - 📋 Result: "2 files copied to clipboard (1 filtered out)"
+
+### Multi-Selection Examples
+**Multiple Files (3 .js files):**
+- 📋 "3 files copied to clipboard"
+
+**Multiple Folders (2 folders with recursive):**
+- 📋 "15 files from 2 folders copied to clipboard"
+
+**Mixed Selection (2 files + 1 folder):**
+- 📋 "8 files copied, 5 from 1 folder to clipboard"
 
 ## 📋 Output Format
 
@@ -109,7 +128,23 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### 🆕 Version 0.0.4
+### 🆕 Version 0.0.7
+- 🎨 **Context-Aware Commands**: Menu labels now adapt based on selection type
+  - Single file → "Copy File to Clipboard"
+  - Single folder → "Copy Folder to Clipboard"
+  - Multiple items → "Copy Content to Clipboard"
+- 🔄 **Mixed Selection Support**: Copy files and folders together in one operation
+- 📁 **Multi-Folder Processing**: Select and copy from multiple folders concurrently
+- ⚡ **Enhanced Performance**: Optimized handling for bulk operations
+- 📊 **Smarter Feedback**: Detailed messages show what was copied and skipped
+
+### Version 0.0.6
+- 🔧 Updated dependencies and improved stability
+
+### Version 0.0.5
+- 🎨 Extension icon and branding updates
+
+### Version 0.0.4
 - ✨ Added extension icon and marketplace gallery banner
 - 🎨 Improved visual presentation in VS Code marketplace
 
