@@ -32,18 +32,27 @@
       {
         "command": "clipboard-copy.copyFolderToClipboard",
         "title": "Copy Folder to Clipboard"
+      },
+      {
+        "command": "clipboard-copy.copyContentToClipboard",
+        "title": "Copy Content to Clipboard"
       }
     ],
     "menus": {
       "explorer/context": [
         {
           "command": "clipboard-copy.copyFileToClipboard",
-          "when": "(resourceScheme == file || resourceScheme == vscode-remote) && !explorerResourceIsFolder",
+          "when": "(resourceScheme == file || resourceScheme == vscode-remote) && !explorerResourceIsFolder && !listMultiSelection",
           "group": "5_cutcopypaste@10"
         },
         {
           "command": "clipboard-copy.copyFolderToClipboard",
-          "when": "(resourceScheme == file || resourceScheme == vscode-remote) && explorerResourceIsFolder",
+          "when": "(resourceScheme == file || resourceScheme == vscode-remote) && explorerResourceIsFolder && !listMultiSelection",
+          "group": "5_cutcopypaste@10"
+        },
+        {
+          "command": "clipboard-copy.copyContentToClipboard",
+          "when": "(resourceScheme == file || resourceScheme == vscode-remote) && listMultiSelection",
           "group": "5_cutcopypaste@10"
         }
       ]
