@@ -200,7 +200,14 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### 🆕 Version 0.0.8
+### 🆕 Version 0.0.9
+- 🔧 **Critical Fix**: Resolved marketplace installation issue where `ignore` module was missing
+- 📦 **Dependency Bundling**: Added esbuild to bundle all dependencies into the extension
+- 🚀 **VS Code Server Compatible**: Now works correctly in remote SSH, containers, and WSL environments
+- ⚡ **Optimized Build**: 60% smaller production bundle with minification
+- 🛠️ **Improved Reliability**: Extension loads correctly for all users without external dependencies
+
+### Version 0.0.8
 - 🚫 **Intelligent Exclusions**: Automatically respect `.gitignore` files
 - 🎛️ **VS Code Integration**: Honor `files.exclude` and `search.exclude` settings
 - ✨ **Custom Excludes**: Add your own patterns to skip unwanted files

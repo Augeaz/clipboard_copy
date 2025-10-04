@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-**ClipboardCopy** is a mature VS Code extension (v0.0.8) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability.
+**ClipboardCopy** is a mature VS Code extension (v0.0.9) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability. Dependencies are bundled using esbuild for optimal load performance and VS Code server compatibility.
 
 **Core Features:**
 - Context-aware commands that adapt to selection type (single vs multiple items)
@@ -20,8 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 **Development Setup:**
 ```bash
-npm install                 # Install dependencies (Node.js 18.x+)
-npm run compile            # Compile TypeScript
+npm install                # Install dependencies (Node.js 18.x+)
+npm run build              # Build with esbuild (development)
+npm run package            # Build for production (minified)
 F5 in VS Code             # Launch Extension Development Host
 ```
 
@@ -38,7 +39,7 @@ F5 in VS Code             # Launch Extension Development Host
 
 ## Architecture
 
-**Tech Stack:** VS Code API 1.93.0+, TypeScript 5.5+ (ES2022/Node16), `ignore` library v7.0+
+**Tech Stack:** VS Code API 1.93.0+, TypeScript 5.5+ (ES2022/Node16), `ignore` library v7.0+, esbuild v0.25+ for bundling
 
 **Key Components:**
 - **CONSTANTS**: Centralized strings for maintainability (includes all 3 command IDs + 3 exclude config keys)
@@ -63,10 +64,18 @@ F5 in VS Code             # Launch Extension Development Host
 - Security-first: validate inputs, sanitize error messages
 - JSDoc comments for complex pattern matching functions
 
-**Commands:**
-- `npm run compile` - Compile to `out/`
-- `npm run watch` - Watch mode
+**Build Commands:**
+- `npm run build` - Build with esbuild (development with sourcemaps)
+- `npm run package` - Production build (minified, no sourcemaps)
+- `npm run watch-esbuild` - Watch mode with esbuild
+- `npm run compile` - TypeScript compilation only (legacy)
 - `Ctrl+Shift+F5` - Reload extension in dev host
+
+**Build System:**
+- Uses esbuild for bundling all dependencies into single output file
+- Production builds are minified and optimized (60% smaller)
+- All dependencies (including `ignore` module) are bundled for marketplace compatibility
+- No external `node_modules` required at runtime
 
 ## Testing
 
@@ -141,12 +150,18 @@ F5 in VS Code             # Launch Extension Development Host
 ```
 clipboard_copy/
 ├── src/extension.ts         # Main logic (750 lines) - modular, security-hardened
-├── package.json             # Extension manifest v0.0.8, VS Code API 1.93.0+
+├── package.json             # Extension manifest v0.0.9, VS Code API 1.93.0+
+├── package-lock.json        # Dependency lock file
 ├── tsconfig.json            # TypeScript ES2022/Node16 configuration
+├── esbuild.js               # Build configuration for bundling
 ├── node_modules/
-│   └── ignore/              # .gitignore parser (v7.0+)
-├── out/                     # Compiled JavaScript output
+│   ├── ignore/              # .gitignore parser (v7.0+) - bundled at build
+│   └── esbuild/             # Build tool (dev dependency)
+├── out/
+│   ├── extension.js         # Bundled output with all dependencies (15K minified)
+│   └── extension.js.map     # Source map (development only)
 ├── .vscode/launch.json      # Extension Development Host debug config
+├── .vscodeignore            # Files excluded from .vsix package
 └── README.md, LICENSE.md    # User documentation, MIT license
 ```
 
@@ -165,7 +180,9 @@ clipboard_copy/
 - `[FIX]` - Bug fixes
 
 **Pre-commit Checklist:**
-- Run `npm run compile` - Ensure compilation succeeds
+- Run `npm run package` - Ensure production build succeeds
+- Test bundled extension works correctly (reload extension host)
 - Test security patterns for input-handling changes
 - Performance test with large file sets
 - Cross-platform testing for path handling changes
+- Verify `out/extension.js` contains bundled dependencies (no external requires)

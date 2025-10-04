@@ -2,7 +2,7 @@
   "name": "clipboard-copy",
   "displayName": "ClipboardCopy",
   "description": "Copy file and folder contents to clipboard via Explorer context menu with intelligent .gitignore filtering, smart multi-selection, and mixed item support",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "icon": "images/icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
@@ -84,13 +84,17 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run package",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "package": "node esbuild.js --production",
+    "build": "node esbuild.js",
+    "watch-esbuild": "node esbuild.js --watch"
   },
   "devDependencies": {
     "@types/node": "^18.x",
     "@types/vscode": "^1.93.0",
+    "esbuild": "^0.25.10",
     "typescript": "^5.9.3"
   },
   "dependencies": {

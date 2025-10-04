@@ -1,6 +1,7 @@
 # Source files
 src/**
 tsconfig.json
+esbuild.js
 
 # Development files
 .vscode/**
