@@ -11,7 +11,7 @@
 
 - 📋 **One-Click Copy**: Right-click any file or folder → instant clipboard copy
 - 🎯 **Smart Filtering**: Advanced pattern matching (`*.js`, `*.{py,ts}`, `[a-z]*`)
-- 🚫 **Intelligent Exclusions**: Hierarchical `.gitignore` support (respects all subdirectory .gitignore files), VS Code excludes, and custom patterns
+- 🚫 **Intelligent Exclusions**: Hierarchical `.gitignore`, VS Code excludes, and custom patterns
 - 📁 **Bulk Operations**: Copy multiple files and entire folders with sub-directory support
 - 🎨 **Context-Aware**: Smart menu labels adapt to your selection (single file/folder vs multiple items)
 - 🔄 **Mixed Selections**: Seamlessly handle files and folders together in one operation
