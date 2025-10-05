@@ -219,58 +219,14 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### 🆕 Version 0.0.10
+### Latest: Version 0.0.10
 - 🌳 **Hierarchical .gitignore Support**: Now respects `.gitignore` files in subdirectories, not just workspace root
 - ✨ **Smart Pattern Combining**: Child .gitignore patterns correctly add to parent patterns
 - 🔍 **Accurate Filtering**: Uses `ignore` library for proper Git-style pattern matching
 - 🔒 **Enhanced Security**: Path validation for all .gitignore files throughout the project
 - ⚡ **Optimized Performance**: Two-phase filtering (VS Code excludes → hierarchical .gitignore)
 
-### Version 0.0.9
-- 🔧 **Critical Fix**: Resolved marketplace installation issue where `ignore` module was missing
-- 📦 **Dependency Bundling**: Added esbuild to bundle all dependencies into the extension
-- 🚀 **VS Code Server Compatible**: Now works correctly in remote SSH, containers, and WSL environments
-- ⚡ **Optimized Build**: 60% smaller production bundle with minification
-- 🛠️ **Improved Reliability**: Extension loads correctly for all users without external dependencies
-
-### Version 0.0.8
-- 🚫 **Intelligent Exclusions**: Automatically respect `.gitignore` files
-- 🎛️ **VS Code Integration**: Honor `files.exclude` and `search.exclude` settings
-- ✨ **Custom Excludes**: Add your own patterns to skip unwanted files
-- 🔒 **Enhanced Security**: Path validation for .gitignore with safe pattern parsing
-- 📦 **Smart Filtering**: All three exclude mechanisms work together seamlessly
-
-### Version 0.0.7
-- 🎨 **Context-Aware Commands**: Menu labels now adapt based on selection type
-  - Single file → "Copy File to Clipboard"
-  - Single folder → "Copy Folder to Clipboard"
-  - Multiple items → "Copy Content to Clipboard"
-- 🔄 **Mixed Selection Support**: Copy files and folders together in one operation
-- 📁 **Multi-Folder Processing**: Select and copy from multiple folders concurrently
-- ⚡ **Enhanced Performance**: Optimized handling for bulk operations
-- 📊 **Smarter Feedback**: Detailed messages show what was copied and skipped
-
-### Version 0.0.6
-- 🔧 Updated dependencies and improved stability
-
-### Version 0.0.5
-- 🎨 Extension icon and branding updates
-
-### Version 0.0.4
-- ✨ Added extension icon and marketplace gallery banner
-- 🎨 Improved visual presentation in VS Code marketplace
-
-### Version 0.0.3
-- 🔒 Enhanced security with input validation and pattern sanitization
-- ⚡ Improved performance with concurrent file processing
-- 🎯 Advanced pattern matching with brace expansion support
-- 📊 Better error reporting and user feedback
-
-### Version 0.0.2
-- 📚 Documentation and publishing improvements
-
-### Version 0.0.1  
-- 🎉 Initial release with core copy functionality
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ---
 
