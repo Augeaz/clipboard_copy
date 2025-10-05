@@ -11,7 +11,7 @@
 
 - 📋 **One-Click Copy**: Right-click any file or folder → instant clipboard copy
 - 🎯 **Smart Filtering**: Advanced pattern matching (`*.js`, `*.{py,ts}`, `[a-z]*`)
-- 🚫 **Intelligent Exclusions**: Automatically respects `.gitignore`, VS Code excludes, and custom patterns
+- 🚫 **Intelligent Exclusions**: Hierarchical `.gitignore` support (respects all subdirectory .gitignore files), VS Code excludes, and custom patterns
 - 📁 **Bulk Operations**: Copy multiple files and entire folders with sub-directory support
 - 🎨 **Context-Aware**: Smart menu labels adapt to your selection (single file/folder vs multiple items)
 - 🔄 **Mixed Selections**: Seamlessly handle files and folders together in one operation
@@ -58,7 +58,12 @@ The extension shows **context-aware commands** based on your selection:
 The extension automatically excludes unwanted files using **three smart filtering mechanisms**:
 
 ### 1. .gitignore Support (Default: Enabled)
-Automatically respects `.gitignore` files in your workspace root:
+Automatically respects `.gitignore` files **throughout your entire project** (hierarchical support):
+- **Workspace root `.gitignore`**: Applies to all files
+- **Subdirectory `.gitignore`**: Adds exclusions for that directory and its children
+- Patterns combine naturally (child .gitignore patterns add to parent patterns)
+
+Examples of excluded files:
 - `node_modules/` → excluded
 - `dist/`, `build/` → excluded
 - `.env`, `*.log` → excluded
@@ -112,11 +117,11 @@ Add your own patterns to exclude:
 ```
 
 ### Exclude Patterns in Action
-**Scenario**: Copying a folder with .gitignore containing `node_modules/` and `*.log`
 
-Directory structure:
+**Scenario 1**: Copying a folder with root .gitignore containing `node_modules/` and `*.log`
 ```
 my-project/
+├── .gitignore       ← contains: node_modules/, *.log
 ├── src/
 │   ├── app.js
 │   └── utils.js
@@ -125,8 +130,22 @@ my-project/
 ├── debug.log        ← excluded by .gitignore
 └── README.md
 ```
-
 **Result**: Only `src/app.js`, `src/utils.js`, and `README.md` are copied!
+
+**Scenario 2**: Hierarchical .gitignore (subdirectory patterns)
+```
+my-project/
+├── .gitignore       ← contains: *.log
+├── src/
+│   ├── app.js
+│   └── debug.log    ← excluded by root .gitignore
+├── tests/
+│   ├── .gitignore   ← contains: *.tmp
+│   ├── test.js
+│   └── temp.tmp     ← excluded by tests/.gitignore
+└── README.md
+```
+**Result**: Copies `src/app.js`, `tests/test.js`, and `README.md` (respects both .gitignore files!)
 
 ### Full Configuration Example
 ```json
@@ -200,7 +219,14 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### 🆕 Version 0.0.9
+### 🆕 Version 0.0.10
+- 🌳 **Hierarchical .gitignore Support**: Now respects `.gitignore` files in subdirectories, not just workspace root
+- ✨ **Smart Pattern Combining**: Child .gitignore patterns correctly add to parent patterns
+- 🔍 **Accurate Filtering**: Uses `ignore` library for proper Git-style pattern matching
+- 🔒 **Enhanced Security**: Path validation for all .gitignore files throughout the project
+- ⚡ **Optimized Performance**: Two-phase filtering (VS Code excludes → hierarchical .gitignore)
+
+### Version 0.0.9
 - 🔧 **Critical Fix**: Resolved marketplace installation issue where `ignore` module was missing
 - 📦 **Dependency Bundling**: Added esbuild to bundle all dependencies into the extension
 - 🚀 **VS Code Server Compatible**: Now works correctly in remote SSH, containers, and WSL environments

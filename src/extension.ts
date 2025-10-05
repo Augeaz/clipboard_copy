@@ -229,46 +229,122 @@ async function readFilesContent(files: vscode.Uri[]): Promise<{
     };
 }
 
-// Load .gitignore patterns from workspace root
-async function loadGitignorePatterns(workspaceFolder: vscode.WorkspaceFolder): Promise<string[]> {
+/**
+ * Find all .gitignore files in a directory tree
+ * @param rootUri The root directory to search
+ * @param workspaceFolder The workspace folder for security validation
+ * @returns Map of directory paths to their .gitignore content
+ */
+async function findAllGitignoreFiles(
+    rootUri: vscode.Uri,
+    workspaceFolder: vscode.WorkspaceFolder
+): Promise<Map<string, string>> {
+    const gitignoreMap = new Map<string, string>();
+
     try {
-        const gitignorePath = vscode.Uri.joinPath(workspaceFolder.uri, '.gitignore');
+        // Find all .gitignore files recursively
+        const gitignoreFiles = await vscode.workspace.findFiles(
+            new vscode.RelativePattern(rootUri, '**/.gitignore'),
+            null // No exclusions - we want to find all .gitignore files
+        );
 
-        // Security: Validate that .gitignore is within workspace
-        if (!gitignorePath.fsPath.startsWith(workspaceFolder.uri.fsPath)) {
-            return [];
-        }
-
-        const gitignoreData = await vscode.workspace.fs.readFile(gitignorePath);
-        const gitignoreContent = new TextDecoder().decode(gitignoreData);
-
-        // Parse .gitignore using ignore library
-        const ig = ignore().add(gitignoreContent);
-
-        // Extract patterns from the ignore instance
-        // Note: We return patterns that can be used with glob syntax
-        const patterns = gitignoreContent
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line && !line.startsWith('#'))
-            .map(pattern => {
-                // Convert .gitignore patterns to glob patterns for findFiles
-                // Remove leading slash for relative patterns
-                if (pattern.startsWith('/')) {
-                    pattern = pattern.substring(1);
+        // Read all .gitignore files concurrently
+        const readPromises = gitignoreFiles.map(async (gitignoreUri) => {
+            try {
+                // Security: Validate that .gitignore is within workspace
+                if (!gitignoreUri.fsPath.startsWith(workspaceFolder.uri.fsPath)) {
+                    return;
                 }
-                // Ensure directory patterns end with /**
-                if (pattern.endsWith('/')) {
-                    return `${pattern}**`;
-                }
-                return pattern;
-            });
 
-        return patterns;
+                const gitignoreData = await vscode.workspace.fs.readFile(gitignoreUri);
+                const gitignoreContent = new TextDecoder().decode(gitignoreData);
+
+                // Store using directory path (remove .gitignore filename)
+                const dirPath = path.dirname(gitignoreUri.fsPath);
+                gitignoreMap.set(dirPath, gitignoreContent);
+            } catch {
+                // Skip unreadable .gitignore files
+            }
+        });
+
+        await Promise.all(readPromises);
     } catch {
-        // .gitignore not found or not readable
-        return [];
+        // If search fails, return empty map
     }
+
+    return gitignoreMap;
+}
+
+/**
+ * Create an ignore instance with hierarchical .gitignore patterns
+ * Applies all .gitignore files from workspace root to the given directory
+ * @param filePath The file path to check
+ * @param workspaceRoot The workspace root path
+ * @param gitignoreMap Map of directory paths to their .gitignore content
+ * @returns An ignore instance with all applicable patterns
+ */
+function createHierarchicalIgnore(
+    filePath: string,
+    workspaceRoot: string,
+    gitignoreMap: Map<string, string>
+): ReturnType<typeof ignore> {
+    const ig = ignore();
+
+    // Get all directories from workspace root to file's directory
+    const fileDir = path.dirname(filePath);
+    const relativePath = path.relative(workspaceRoot, fileDir);
+
+    // Build list of directories to check (from root to file's directory)
+    const dirsToCheck: string[] = [workspaceRoot];
+
+    if (relativePath && relativePath !== '.') {
+        const parts = relativePath.split(path.sep);
+        let currentPath = workspaceRoot;
+
+        for (const part of parts) {
+            currentPath = path.join(currentPath, part);
+            dirsToCheck.push(currentPath);
+        }
+    }
+
+    // Add .gitignore patterns from root to leaf (order matters)
+    for (const dir of dirsToCheck) {
+        const gitignoreContent = gitignoreMap.get(dir);
+        if (gitignoreContent) {
+            ig.add(gitignoreContent);
+        }
+    }
+
+    return ig;
+}
+
+/**
+ * Filter files using hierarchical .gitignore rules
+ * @param files The files to filter
+ * @param workspaceRoot The workspace root path
+ * @param gitignoreMap Map of directory paths to their .gitignore content
+ * @returns Filtered files that are not ignored
+ */
+function filterFilesWithGitignore(
+    files: vscode.Uri[],
+    workspaceRoot: string,
+    gitignoreMap: Map<string, string>
+): vscode.Uri[] {
+    if (gitignoreMap.size === 0) {
+        return files;
+    }
+
+    return files.filter(file => {
+        // Create ignore instance with patterns applicable to this file
+        const ig = createHierarchicalIgnore(file.fsPath, workspaceRoot, gitignoreMap);
+
+        // Get relative path from workspace root
+        const relativePath = path.relative(workspaceRoot, file.fsPath);
+
+        // Check if file should be ignored (use forward slashes for ignore library)
+        const normalizedPath = relativePath.split(path.sep).join('/');
+        return !ig.ignores(normalizedPath);
+    });
 }
 
 // Get VS Code's files.exclude and search.exclude patterns
@@ -302,17 +378,11 @@ function getVSCodeExcludePatterns(): string[] {
     return patterns;
 }
 
-// Build combined exclude pattern from all sources
+// Build combined exclude pattern from VS Code excludes and custom patterns
+// Note: .gitignore patterns are now handled separately via hierarchical filtering
 async function buildExcludePattern(workspaceFolder?: vscode.WorkspaceFolder): Promise<string | undefined> {
     const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
     const allPatterns: string[] = [];
-
-    // Load .gitignore patterns if enabled
-    const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
-    if (respectGitignore && workspaceFolder) {
-        const gitignorePatterns = await loadGitignorePatterns(workspaceFolder);
-        allPatterns.push(...gitignorePatterns);
-    }
 
     // Load VS Code exclude patterns if enabled
     const respectVSCodeExcludes = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_VSCODE_EXCLUDES, true);
@@ -357,7 +427,7 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
         // Get workspace folder for exclude pattern building
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
 
-        // Build exclude pattern from all sources
+        // Build exclude pattern from VS Code excludes and custom patterns
         const excludePattern = await buildExcludePattern(workspaceFolder);
 
         // Combine patterns for efficient single search
@@ -370,10 +440,18 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
             ? `{${adjustedPatterns.join(',')}}`
             : adjustedPatterns[0];
 
-        const files = await vscode.workspace.findFiles(
+        let files = await vscode.workspace.findFiles(
             new vscode.RelativePattern(uri, combinedPattern),
             excludePattern
         );
+
+        // Apply hierarchical .gitignore filtering if enabled
+        const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
+        const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
+        if (respectGitignore && workspaceFolder) {
+            const gitignoreMap = await findAllGitignoreFiles(uri, workspaceFolder);
+            files = filterFilesWithGitignore(files, workspaceFolder.uri.fsPath, gitignoreMap);
+        }
 
         // Normalize paths for cross-platform deduplication (handle case sensitivity)
         const uniqueFiles = new Map<string, vscode.Uri>();
@@ -390,7 +468,7 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
         const excludePattern = await buildExcludePattern(workspaceFolder);
 
-        const allFiles: vscode.Uri[] = [];
+        let allFiles: vscode.Uri[] = [];
         for (const pattern of patterns) {
             try {
                 const adjustedPattern = isRecursive ? `**/${pattern}` : pattern;
@@ -402,6 +480,14 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
             } catch {
                 // Skip invalid patterns silently
             }
+        }
+
+        // Apply hierarchical .gitignore filtering if enabled
+        const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
+        const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
+        if (respectGitignore && workspaceFolder) {
+            const gitignoreMap = await findAllGitignoreFiles(uri, workspaceFolder);
+            allFiles = filterFilesWithGitignore(allFiles, workspaceFolder.uri.fsPath, gitignoreMap);
         }
 
         // Deduplicate with normalized paths

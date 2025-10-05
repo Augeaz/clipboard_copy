@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-**ClipboardCopy** is a mature VS Code extension (v0.0.9) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability. Dependencies are bundled using esbuild for optimal load performance and VS Code server compatibility.
+**ClipboardCopy** is a mature VS Code extension (v0.0.10) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability. Dependencies are bundled using esbuild for optimal load performance and VS Code server compatibility.
 
 **Core Features:**
 - Context-aware commands that adapt to selection type (single vs multiple items)
 - Mixed selection support (files + folders in one operation)
 - Multi-folder concurrent processing with deduplication
 - Pattern filtering with advanced glob support (`*.{js,ts}`, `[a-z]`)
-- **Intelligent exclusions**: Respects `.gitignore`, VS Code excludes, and custom patterns
+- **Intelligent exclusions**: Hierarchical `.gitignore` support (respects all .gitignore files in subdirectories), VS Code excludes, and custom patterns
 - Security-hardened input validation and path traversal prevention
 - Concurrent file processing for performance
 - Comprehensive error handling with sanitized messages
@@ -46,10 +46,13 @@ F5 in VS Code             # Launch Extension Development Host
 - **Security Functions**: Input validation, path traversal prevention
 - **Selection Helpers**: `separateFilesAndFolders` - separates mixed URI selections
 - **Pattern Matching**: Cross-platform glob support with brace expansion
-- **Exclude Filtering**: Three-tier exclusion system
-  - `loadGitignorePatterns()` - Reads .gitignore from workspace root (src/extension.ts:233-272)
-  - `getVSCodeExcludePatterns()` - Extracts VS Code's files.exclude/search.exclude (src/extension.ts:274-303)
-  - `buildExcludePattern()` - Combines all sources into single glob pattern (src/extension.ts:305-352)
+- **Exclude Filtering**: Three-tier exclusion system with hierarchical .gitignore support
+  - `findAllGitignoreFiles()` - Recursively finds all .gitignore files in directory tree (src/extension.ts:238-277)
+  - `createHierarchicalIgnore()` - Builds ignore instance with patterns from root to file location (src/extension.ts:286-320)
+  - `filterFilesWithGitignore()` - Post-filters files using hierarchical .gitignore rules (src/extension.ts:328-349)
+  - `getVSCodeExcludePatterns()` - Extracts VS Code's files.exclude/search.exclude (src/extension.ts:351-381)
+  - `buildExcludePattern()` - Combines VS Code excludes and custom patterns (src/extension.ts:383-423)
+  - `processGlobPatterns()` - Applies two-phase filtering: VS Code excludes first, then hierarchical .gitignore (src/extension.ts:425-505)
 - **File Operations**: Concurrent reading with `Promise.all`, smart error handling
 - **Folder Processing**: `processFoldersContent` - multi-folder concurrent processing with deduplication
 - **Commands**: 3 context-aware commands with resource type validation and detailed error reporting
@@ -92,9 +95,12 @@ F5 in VS Code             # Launch Extension Development Host
 
 **Exclude Filtering Tests:**
 1. **.gitignore Integration**:
-   - Create `.gitignore` with `node_modules/`, `*.log`
+   - Create workspace root `.gitignore` with `node_modules/`, `*.log`
    - Copy folder containing these patterns
    - Verify excluded files are skipped
+   - **Hierarchical .gitignore**: Create nested `.gitignore` files in subdirectories
+   - Verify child .gitignore patterns only apply to their subtree
+   - Verify patterns combine correctly (child patterns add to parent patterns)
 2. **VS Code Excludes**:
    - Set `files.exclude` with `**/.git`, `**/dist`
    - Copy folder containing these patterns
@@ -132,7 +138,7 @@ F5 in VS Code             # Launch Extension Development Host
 - URI validation for correct operation types (file vs folder)
 - Type checking with `vscode.workspace.fs.stat()` before processing
 - Graceful handling of unreadable files
-- **.gitignore path validation**: Ensures .gitignore is within workspace boundaries
+- **.gitignore path validation**: Ensures all .gitignore files (root and subdirectories) are within workspace boundaries
 
 **Error Security:**
 - Generic error messages prevent information leakage
@@ -141,8 +147,8 @@ F5 in VS Code             # Launch Extension Development Host
 
 **Exclude Filtering Security:**
 - .gitignore patterns parsed by `ignore` library (battle-tested by ESLint/Prettier)
-- Path traversal prevention for .gitignore file location
-- Safe handling of missing or malformed .gitignore files
+- Path traversal prevention for all .gitignore file locations (hierarchical validation)
+- Safe handling of missing or malformed .gitignore files in any directory
 - Custom patterns validated before application
 
 ## Project Structure
@@ -150,7 +156,7 @@ F5 in VS Code             # Launch Extension Development Host
 ```
 clipboard_copy/
 ├── src/extension.ts         # Main logic (750 lines) - modular, security-hardened
-├── package.json             # Extension manifest v0.0.9, VS Code API 1.93.0+
+├── package.json             # Extension manifest v0.0.10, VS Code API 1.93.0+
 ├── package-lock.json        # Dependency lock file
 ├── tsconfig.json            # TypeScript ES2022/Node16 configuration
 ├── esbuild.js               # Build configuration for bundling
