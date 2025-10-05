@@ -5,6 +5,20 @@ All notable changes to the ClipboardCopy extension will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11] - 2025-10-05
+
+### Fixed
+- 🐛 **Critical .gitignore Bug**: Fixed hierarchical .gitignore to search from workspace root instead of copied folder
+  - Now correctly finds and applies root `.gitignore` patterns when copying subfolders
+  - Previously only found `.gitignore` files within the copied folder, missing parent patterns
+- 🔧 **Anchored Pattern Support**: Fixed patterns with leading `/` (e.g., `/.next/`, `/dist/`) in subdirectory `.gitignore` files
+  - Each `.gitignore` is now tested separately with paths relative to its directory
+  - Properly handles directory-anchored patterns as per Git specification
+
+### Changed
+- ⚡ **Performance Optimization**: Added ignore instance caching to minimize redundant pattern compilation
+- 🏗️ **Architecture**: Refactored from combined ignore instance to separate testing per `.gitignore` file
+
 ## [0.0.10] - 2025-10-05
 
 ### Added

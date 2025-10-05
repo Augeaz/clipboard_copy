@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-**ClipboardCopy** is a mature VS Code extension (v0.0.10) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability. Dependencies are bundled using esbuild for optimal load performance and VS Code server compatibility.
+**ClipboardCopy** is a mature VS Code extension (v0.0.11) that copies file and folder contents to clipboard via Explorer context menu. The 750-line TypeScript codebase emphasizes security hardening, performance optimization, and cross-platform reliability. Dependencies are bundled using esbuild for optimal load performance and VS Code server compatibility.
 
 **Core Features:**
 - Context-aware commands that adapt to selection type (single vs multiple items)
@@ -47,12 +47,12 @@ F5 in VS Code             # Launch Extension Development Host
 - **Selection Helpers**: `separateFilesAndFolders` - separates mixed URI selections
 - **Pattern Matching**: Cross-platform glob support with brace expansion
 - **Exclude Filtering**: Three-tier exclusion system with hierarchical .gitignore support
-  - `findAllGitignoreFiles()` - Recursively finds all .gitignore files in directory tree (src/extension.ts:238-277)
-  - `createHierarchicalIgnore()` - Builds ignore instance with patterns from root to file location (src/extension.ts:286-320)
-  - `filterFilesWithGitignore()` - Post-filters files using hierarchical .gitignore rules (src/extension.ts:328-349)
-  - `getVSCodeExcludePatterns()` - Extracts VS Code's files.exclude/search.exclude (src/extension.ts:351-381)
-  - `buildExcludePattern()` - Combines VS Code excludes and custom patterns (src/extension.ts:383-423)
-  - `processGlobPatterns()` - Applies two-phase filtering: VS Code excludes first, then hierarchical .gitignore (src/extension.ts:425-505)
+  - `findAllGitignoreFiles()` - Recursively finds all .gitignore files from workspace root (src/extension.ts:238-277)
+  - `createHierarchicalIgnoreList()` - Creates separate ignore instances for each applicable .gitignore with caching (src/extension.ts:287-328)
+  - `filterFilesWithGitignore()` - Tests each file against all applicable .gitignore files using relative paths (src/extension.ts:339-374)
+  - `getVSCodeExcludePatterns()` - Extracts VS Code's files.exclude/search.exclude (src/extension.ts:376-406)
+  - `buildExcludePattern()` - Combines VS Code excludes and custom patterns (src/extension.ts:408-448)
+  - `processGlobPatterns()` - Applies two-phase filtering: VS Code excludes first, then hierarchical .gitignore (src/extension.ts:450-530)
 - **File Operations**: Concurrent reading with `Promise.all`, smart error handling
 - **Folder Processing**: `processFoldersContent` - multi-folder concurrent processing with deduplication
 - **Commands**: 3 context-aware commands with resource type validation and detailed error reporting

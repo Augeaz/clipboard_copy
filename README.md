@@ -219,12 +219,11 @@ MIT License - see [LICENSE.md](LICENSE.md) for details.
 
 ## 📈 Release Notes
 
-### Latest: Version 0.0.10
-- 🌳 **Hierarchical .gitignore Support**: Now respects `.gitignore` files in subdirectories, not just workspace root
-- ✨ **Smart Pattern Combining**: Child .gitignore patterns correctly add to parent patterns
-- 🔍 **Accurate Filtering**: Uses `ignore` library for proper Git-style pattern matching
-- 🔒 **Enhanced Security**: Path validation for all .gitignore files throughout the project
-- ⚡ **Optimized Performance**: Two-phase filtering (VS Code excludes → hierarchical .gitignore)
+### Latest: Version 0.0.11
+- 🐛 **Critical Fix**: Fixed hierarchical .gitignore to properly find root patterns when copying subfolders
+- 🔧 **Anchored Patterns**: Fixed support for patterns with leading `/` (e.g., `/.next/`, `/dist/`) in subdirectory `.gitignore` files
+- ⚡ **Performance**: Added ignore instance caching for optimized pattern matching
+- 🏗️ **Architecture**: Refactored to test each `.gitignore` separately with proper relative paths
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 

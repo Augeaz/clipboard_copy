@@ -276,19 +276,21 @@ async function findAllGitignoreFiles(
 }
 
 /**
- * Create an ignore instance with hierarchical .gitignore patterns
- * Applies all .gitignore files from workspace root to the given directory
+ * Create ignore instances for all applicable .gitignore files
+ * Each .gitignore is kept separate to properly handle patterns with leading /
  * @param filePath The file path to check
  * @param workspaceRoot The workspace root path
  * @param gitignoreMap Map of directory paths to their .gitignore content
- * @returns An ignore instance with all applicable patterns
+ * @param ignoreCache Cache of ignore instances by directory
+ * @returns Array of {ignore instance, base directory} pairs
  */
-function createHierarchicalIgnore(
+function createHierarchicalIgnoreList(
     filePath: string,
     workspaceRoot: string,
-    gitignoreMap: Map<string, string>
-): ReturnType<typeof ignore> {
-    const ig = ignore();
+    gitignoreMap: Map<string, string>,
+    ignoreCache: Map<string, ReturnType<typeof ignore>>
+): Array<{ ig: ReturnType<typeof ignore>; baseDir: string }> {
+    const result: Array<{ ig: ReturnType<typeof ignore>; baseDir: string }> = [];
 
     // Get all directories from workspace root to file's directory
     const fileDir = path.dirname(filePath);
@@ -307,19 +309,28 @@ function createHierarchicalIgnore(
         }
     }
 
-    // Add .gitignore patterns from root to leaf (order matters)
+    // Create separate ignore instance for each .gitignore (with caching)
     for (const dir of dirsToCheck) {
         const gitignoreContent = gitignoreMap.get(dir);
         if (gitignoreContent) {
-            ig.add(gitignoreContent);
+            // Check cache first
+            let ig = ignoreCache.get(dir);
+            if (!ig) {
+                // Create new instance and cache it
+                ig = ignore().add(gitignoreContent);
+                ignoreCache.set(dir, ig);
+            }
+            result.push({ ig, baseDir: dir });
         }
     }
 
-    return ig;
+    return result;
 }
 
 /**
  * Filter files using hierarchical .gitignore rules
+ * Tests each file against each applicable .gitignore separately to properly handle
+ * patterns with leading / that are anchored to specific directories
  * @param files The files to filter
  * @param workspaceRoot The workspace root path
  * @param gitignoreMap Map of directory paths to their .gitignore content
@@ -334,16 +345,31 @@ function filterFilesWithGitignore(
         return files;
     }
 
+    // Cache ignore instances for performance
+    const ignoreCache = new Map<string, ReturnType<typeof ignore>>();
+
     return files.filter(file => {
-        // Create ignore instance with patterns applicable to this file
-        const ig = createHierarchicalIgnore(file.fsPath, workspaceRoot, gitignoreMap);
+        // Get all applicable .gitignore instances for this file
+        const ignoreList = createHierarchicalIgnoreList(
+            file.fsPath,
+            workspaceRoot,
+            gitignoreMap,
+            ignoreCache
+        );
 
-        // Get relative path from workspace root
-        const relativePath = path.relative(workspaceRoot, file.fsPath);
+        // Test against each .gitignore separately using paths relative to that .gitignore's directory
+        for (const { ig, baseDir } of ignoreList) {
+            const relativePath = path.relative(baseDir, file.fsPath);
+            const normalizedPath = relativePath.split(path.sep).join('/');
 
-        // Check if file should be ignored (use forward slashes for ignore library)
-        const normalizedPath = relativePath.split(path.sep).join('/');
-        return !ig.ignores(normalizedPath);
+            if (ig.ignores(normalizedPath)) {
+                // File is ignored by this .gitignore - exclude it
+                return false;
+            }
+        }
+
+        // File is not ignored by any .gitignore - include it
+        return true;
     });
 }
 
@@ -449,7 +475,7 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
         const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
         const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
         if (respectGitignore && workspaceFolder) {
-            const gitignoreMap = await findAllGitignoreFiles(uri, workspaceFolder);
+            const gitignoreMap = await findAllGitignoreFiles(workspaceFolder.uri, workspaceFolder);
             files = filterFilesWithGitignore(files, workspaceFolder.uri.fsPath, gitignoreMap);
         }
 
@@ -486,7 +512,7 @@ async function processGlobPatterns(uri: vscode.Uri, patterns: string[], isRecurs
         const config = vscode.workspace.getConfiguration(CONSTANTS.CONFIG.NAMESPACE);
         const respectGitignore = config.get<boolean>(CONSTANTS.CONFIG.RESPECT_GITIGNORE, true);
         if (respectGitignore && workspaceFolder) {
-            const gitignoreMap = await findAllGitignoreFiles(uri, workspaceFolder);
+            const gitignoreMap = await findAllGitignoreFiles(workspaceFolder.uri, workspaceFolder);
             allFiles = filterFilesWithGitignore(allFiles, workspaceFolder.uri.fsPath, gitignoreMap);
         }
 
