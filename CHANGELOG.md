@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - 🔒 **Enhanced Security**: Path validation for all .gitignore files throughout the project
 
-## [0.0.9] - 2025-01-XX
+## [0.0.9] - 2025-10-04
 
 ### Fixed
 - 🔧 **Critical Fix**: Resolved marketplace installation issue where `ignore` module was missing
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ⚡ **Optimized Build**: 60% smaller production bundle with minification
 - 🛠️ **Improved Reliability**: Extension loads correctly for all users without external dependencies
 
-## [0.0.8] - 2025-01-XX
+## [0.0.8] - 2025-10-04
 
 ### Added
 - 🚫 **Intelligent Exclusions**: Automatically respect `.gitignore` files
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - 🔒 **Enhanced Security**: Path validation for .gitignore with safe pattern parsing
 
-## [0.0.7] - 2025-01-XX
+## [0.0.7] - 2025-10-04
 
 ### Added
 - 🎨 **Context-Aware Commands**: Menu labels now adapt based on selection type
@@ -56,23 +56,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ⚡ **Enhanced Performance**: Optimized handling for bulk operations
 - 📊 **Smarter Feedback**: Detailed messages show what was copied and skipped
 
-## [0.0.6] - 2024-XX-XX
+## [0.0.6] - 2025-10-04
 
 ### Changed
 - 🔧 Updated dependencies and improved stability
 
-## [0.0.5] - 2024-XX-XX
+## [0.0.5] - 2025-09-25
 
 ### Changed
 - 🎨 Extension icon and branding updates
 
-## [0.0.4] - 2024-XX-XX
+## [0.0.4] - 2025-09-25
 
 ### Added
 - ✨ Added extension icon and marketplace gallery banner
 - 🎨 Improved visual presentation in VS Code marketplace
 
-## [0.0.3] - 2024-XX-XX
+## [0.0.3] - 2025-09-25
 
 ### Added
 - 🎯 Advanced pattern matching with brace expansion support
@@ -84,12 +84,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - 🔒 Enhanced security with input validation and pattern sanitization
 
-## [0.0.2] - 2024-XX-XX
+## [0.0.2] - 2025-09-25
 
 ### Changed
 - 📚 Documentation and publishing improvements
 
-## [0.0.1] - 2024-XX-XX
+## [0.0.1] - 2025-09-25
 
 ### Added
 - 🎉 Initial release with core copy functionality
